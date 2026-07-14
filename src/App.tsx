@@ -39,7 +39,7 @@ const App = () => {
   const [aiModal, setAiModal] = useState({ isOpen: false, query: '', response: '', isTyping: false });
   const fileInputRef = useRef(null);
 
-  // Sincronización en tiempo real con Firebase (sustituye localStorage)
+  // Sincronización Real con Firebase
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'inventario'), (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), archivadores: doc.data().archivadores || [] }));
@@ -55,7 +55,7 @@ const App = () => {
 
   const addBox = async () => {
     await addDoc(collection(db, 'inventario'), { name: `Caja Fuerte ${boxes.length + 1}`, archivadores: [], timestamp: new Date().toLocaleString() });
-    showNotification("Nueva caja agregada exitosamente");
+    showNotification("Caja creada en la nube");
   };
 
   const addArchivador = async (boxId) => {
@@ -82,29 +82,22 @@ const App = () => {
     reader.readAsText(file);
   };
 
-  // Puedes insertar aquí tus funciones adicionales (handleFileUpload, confirmDelete, etc.) 
-  // usando siempre 'updateDoc(doc(db, 'inventario', id), ...)' para que se sincronicen globalmente.
-
   return (
-    <div className="min-h-screen bg-slate-100 font-sans p-6 selection:bg-indigo-200">
-      {/* HEADER */}
+    <div className="min-h-screen bg-slate-100 p-6">
       <div className="max-w-7xl mx-auto mb-8 flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
         <h1 className="text-3xl font-black text-indigo-700 flex items-center gap-3"><Database size={32} /> Archivo Inteligente</h1>
         <div className="flex gap-3">
-          <button onClick={() => setAiModal({ ...aiModal, isOpen: true })} className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold flex items-center gap-2"><Bot size={20} /> Asistente IA</button>
+          <button onClick={() => setAiModal({ ...aiModal, isOpen: true })} className="px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold">Asistente IA</button>
           <button onClick={exportBackup} className="px-4 py-2 bg-slate-100 border border-slate-300 rounded-xl font-bold">Exportar</button>
           <label className="px-4 py-2 bg-slate-100 border border-slate-300 rounded-xl font-bold cursor-pointer">Importar <input type="file" onChange={importBackup} className="hidden" /></label>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* PANEL LATERAL */}
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 h-fit">
-          <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 mb-4" placeholder="Buscar RUT, depto, doc..." onChange={(e) => setSearchQuery(e.target.value)} />
+          <input className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 mb-4" placeholder="Buscar..." onChange={(e) => setSearchQuery(e.target.value)} />
           <button onClick={addBox} className="w-full py-3.5 bg-slate-800 text-white font-bold rounded-2xl mb-4">Crear Nueva Caja</button>
         </div>
-        
-        {/* PANEL DERECHO */}
         <div className="lg:col-span-3">
           {boxes.length === 0 ? <div className="text-center p-16 border-2 border-dashed rounded-3xl text-slate-500 font-bold">No hay cajas o no se encontraron resultados.</div> : boxes.map(box => <div key={box.id} className="bg-white p-6 mb-4 rounded-3xl border border-slate-200 shadow-sm cursor-pointer" onClick={() => setActiveBoxId(box.id)}><h2 className="text-2xl font-black">{box.name}</h2></div>)}
         </div>
