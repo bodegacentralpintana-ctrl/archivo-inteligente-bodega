@@ -21,9 +21,7 @@ const DEPARTMENTS = [
 const DOC_TYPES = [
   "SALIDAS MANUALES", "SALIDAS INSICO", "PERMISOS ADMINISTRATIVOS Y VACACIONES", "VALES DE GAS", 
   "SALIDAS DE INFORMÁTICA", "HOJAS DE ENVÍO Y MEMOS", "REMATES", "ALTAS DE INVENTARIO", 
-  "TRASLADOS", "MIMEÓGRAFO", "DECOMISO JUZGADO DE POLICÍA LOCAL (J.P.L)", "CORRESPONDENCIA", 
-  "DONACIONES", "ENTREGA DE TÓNER (SALIDA)", "RESMAS CARTA (SALIDA)", "RESMAS OFICIO (SALIDA)", 
-  "CORREO ELECTRÓNICO", "ACTAS DE ENTREGA", "FACTURA", "GUÍA"
+  "TRASLADOS", "MIMEÓGRAFO", "DECOMISO JUZGADO DE POLICÍA LOCAL (J.P.L)", "CORRESPONDENCIA"
 ];
 
 const App = () => {
@@ -35,21 +33,13 @@ const App = () => {
   const [deleteAuthModal, setDeleteAuthModal] = useState({ isOpen: false, type: null, targetId: null, parentId: null, password: '' });
   const [linkModal, setLinkModal] = useState({ isOpen: false, boxId: null, arcId: null, name: '', url: '' });
   const [inventoryModal, setInventoryModal] = useState(false);
-  const [classifierModal, setClassifierModal] = useState({ isOpen: false });
+  const [classifierModal, setClassifierModal] = useState({ isOpen: false, fileId: null, boxId: null, arcId: null, name: '', docType: '', department: '', date: '', rut: '', provider: '', observations: '' });
   const [aiModal, setAiModal] = useState({ isOpen: false, query: '', response: '', isTyping: false });
   const fileInputRef = useRef(null);
 
-  // LECTURA EN TIEMPO REAL: Sincronización automática de Firebase
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'inventario'), (snapshot) => {
-      const cajasFirebase = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          archivadores: data.archivadores || [] 
-        };
-      });
+      const cajasFirebase = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), archivadores: doc.data().archivadores || [] }));
       cajasFirebase.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       setBoxes(cajasFirebase);
     });
@@ -63,22 +53,39 @@ const App = () => {
 
   const addBox = async () => {
     try {
-      await addDoc(collection(db, 'inventario'), {
-        name: `Caja Fuerte ${boxes.length + 1}`,
-        archivadores: [],
-        timestamp: new Date().toLocaleString()
-      });
-    } catch (error) {
-      showNotification("Error al guardar en la nube", "error");
-    }
+      await addDoc(collection(db, 'inventario'), { name: `Caja Fuerte ${boxes.length + 1}`, archivadores: [], timestamp: new Date().toLocaleString() });
+      showNotification("Caja creada en la nube");
+    } catch (e) { showNotification("Error al guardar", "error"); }
   };
 
-  // ... (Puedes mantener el resto de tus funciones: addArchivador, handleFileUpload, etc. aquí mismo)
-  // Nota: Asegúrate de que todas usen 'updateDoc' o 'addDoc' contra 'db' como en tu original.
-
   return (
-    <div className="min-h-screen bg-slate-100 font-sans p-6 selection:bg-indigo-200">
-      {/* ... (Tu diseño JSX original) ... */}
+    <div className="min-h-screen bg-slate-100 p-6">
+      <div className="max-w-7xl mx-auto mb-8 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+        <h1 className="text-3xl font-black text-indigo-700 flex items-center gap-3">
+          <Database size={32} /> Archivo Inteligente
+        </h1>
+      </div>
+
+      <div className="max-w-7xl mx-auto">
+        <button onClick={addBox} className="bg-slate-800 text-white px-6 py-3 rounded-2xl font-bold mb-6">
+          Crear Nueva Caja
+        </button>
+
+        <div className="grid gap-4">
+          {boxes.map(box => (
+            <div key={box.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+              <h2 className="text-2xl font-black text-slate-800">{box.name}</h2>
+              <p className="text-sm text-slate-500">{box.archivadores.length} archivadores</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {notification && (
+        <div className="fixed top-6 right-6 bg-slate-800 text-white px-6 py-4 rounded-2xl shadow-2xl">
+          {notification.msg}
+        </div>
+      )}
     </div>
   );
 };
